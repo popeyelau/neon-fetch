@@ -6,11 +6,31 @@ import {
 } from "@/lib/search";
 import { indie } from "@/lib/db";
 import { Journal } from "@/lib/types";
+// import { PrismaClient } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
     // 获取分页参数
     const { pageSize, offset } = getPaginationParams(request);
+
+    // const prisma = new PrismaClient();
+
+    // const b = await prisma.journal.findMany({
+    //   where: {
+    //     journalno: {
+    //       equals: 1116,
+    //     },
+    //     OR: [
+    //       {
+    //         journalno: {
+    //           equals: 1115,
+    //         },
+    //       },
+    //     ],
+    //   },
+    // });
+
+    // console.log(b);
 
     // 获取搜索参数
     const searchParams = getJournalSearchParams(request);
@@ -26,10 +46,7 @@ export async function GET(request: Request) {
       LIMIT $${values.length + 1} OFFSET $${values.length + 2}
     `;
 
-    console.log(dataQuery);
-
     const dataValues = [...values, pageSize, offset];
-    console.log(dataQuery, dataValues);
     const journals = (await indie.query(dataQuery, dataValues)) as Journal[];
 
     return NextResponse.json({

@@ -94,7 +94,7 @@ async function insertJournal(journal: Journal, tracks: Track[]) {
       journal.editor,
       convertDate(journal.date),
       JSON.stringify(tracks),
-      Array.isArray(journal.tag) ? journal.tag.join(",") : journal.tag,
+      Array.isArray(journal.tags) ? journal.tags.join(",") : journal.tags,
     ]
   );
 
