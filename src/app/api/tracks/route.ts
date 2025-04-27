@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { buildTrackSearchCondition, getTrackSearchParams } from "@/lib/search";
 import { indie } from "@/lib/db";
+import { Track } from "@/lib/types";
 
 export async function GET(request: Request) {
   try {
@@ -29,17 +30,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
-
-interface Track {
-  id: string;
-  title: string;
-  artist: string;
-  album: string;
-  src: string;
-  pic: string;
-  lrc: string;
-  journalNo: number;
-  songNo: number;
-  duration: string;
 }

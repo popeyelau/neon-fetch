@@ -1,4 +1,5 @@
 import { indie } from "@/lib/db";
+import { Journal } from "@/lib/types";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -7,14 +8,17 @@ export async function GET(
 ) {
   try {
     const { journalNo } = await params;
-    // 查询特定ID的音轨
-    const trackQuery = `SELECT id, title, artist, album, src, pic, lrc,  journalno AS "journalNo",  songno AS "songNo", duration FROM track WHERE journalno = $1`;
-    const trackResult = await indie.query(trackQuery, [journalNo]);
+    const journalQuery = `SELECT id, journalno AS "journalNo", title, image, summary, content, editor, date, tags FROM journal WHERE journalno = $1`;
+    const journalResult = (await indie.query(journalQuery, [
+      journalNo,
+    ])) as Journal[];
+
+    const data = (journalResult && journalResult[0]) || null;
 
     // 返回音轨和相关日志条目
     return NextResponse.json({
       success: true,
-      data: trackResult,
+      data,
     });
   } catch (error) {
     console.error("Error fetching track:", error);

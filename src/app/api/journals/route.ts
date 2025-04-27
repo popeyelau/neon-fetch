@@ -5,6 +5,7 @@ import {
   buildJournalSearchCondition,
 } from "@/lib/search";
 import { indie } from "@/lib/db";
+import { Journal } from "@/lib/types";
 
 export async function GET(request: Request) {
   try {
@@ -40,16 +41,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
-
-interface Journal {
-  id: string;
-  journalNo: number;
-  title: string;
-  image: string;
-  summary: string;
-  content: string;
-  editor: string;
-  date: number;
-  tag: string;
 }
