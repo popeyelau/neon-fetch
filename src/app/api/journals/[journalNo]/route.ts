@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { journalNo } = await params;
-    const journalQuery = `SELECT id, journalno AS "journalNo", title, image, summary, content, editor, date, tags FROM journal WHERE journalno = $1`;
+    const journalQuery = `SELECT id, journalno AS "journalNo", title, image, summary, content, editor, to_timestamp(date/1000) AS date, tags FROM journal WHERE journalno = $1`;
     const journalResult = (await indie.query(journalQuery, [
       journalNo,
     ])) as Journal[];

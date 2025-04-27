@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
     // 查询分页后的日志条目
     const dataQuery = `
-      SELECT id, journalno AS "journalNo", title, image, summary, content, editor, date, tags FROM journal
+      SELECT id, journalno AS "journalNo", title, image, summary, content, editor, to_timestamp(date/1000) AS date, tags FROM journal
       ${whereClause}
       ORDER BY date DESC
       LIMIT $${values.length + 1} OFFSET $${values.length + 2}

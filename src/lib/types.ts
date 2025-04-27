@@ -6,7 +6,7 @@ export interface Journal {
   summary: string;
   content: string;
   editor: string;
-  date: number;
+  date: string;
   tag: string;
 }
 
