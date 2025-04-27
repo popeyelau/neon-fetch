@@ -1,7 +1,6 @@
-import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 import { buildTrackSearchCondition, getTrackSearchParams } from "@/lib/search";
-import { useSql } from "@/app/hooks/useSql";
+import { indie } from "@/lib/db";
 
 export async function GET(request: Request) {
   try {
@@ -9,8 +8,6 @@ export async function GET(request: Request) {
 
     // 构建搜索条件
     const { whereClause, values } = buildTrackSearchCondition(searchParams);
-    // 创建数据库连接
-    const sql = useSql();
 
     // 查询分页后的日志条目
     const dataQuery = `
@@ -19,7 +16,7 @@ export async function GET(request: Request) {
     `;
 
     console.log(dataQuery, values);
-    const tracks = (await sql.query(dataQuery, values)) as Track[];
+    const tracks = (await indie.query(dataQuery, values)) as Track[];
 
     return NextResponse.json({
       success: true,

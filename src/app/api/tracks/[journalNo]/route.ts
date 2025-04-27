@@ -1,5 +1,4 @@
-import { useSql } from "@/app/hooks/useSql";
-import { neon } from "@neondatabase/serverless";
+import { indie } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -9,10 +8,9 @@ export async function GET(
   try {
     const journalNo = params.journalNo;
 
-    const sql = useSql();
     // 查询特定ID的音轨
     const trackQuery = `SELECT id, title, artist, album, src, pic, lrc,  journalno AS "journalNo",  songno AS "songNo", duration FROM track WHERE journalno = $1`;
-    const trackResult = await sql.query(trackQuery, [journalNo]);
+    const trackResult = await indie.query(trackQuery, [journalNo]);
 
     // 返回音轨和相关日志条目
     return NextResponse.json({

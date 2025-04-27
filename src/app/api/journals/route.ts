@@ -1,11 +1,10 @@
-import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 import { getPaginationParams } from "@/lib/pagination";
 import {
   getJournalSearchParams,
   buildJournalSearchCondition,
 } from "@/lib/search";
-import { useSql } from "@/app/hooks/useSql";
+import { indie } from "@/lib/db";
 
 export async function GET(request: Request) {
   try {
@@ -18,8 +17,6 @@ export async function GET(request: Request) {
     // 构建搜索条件
     const { whereClause, values } = buildJournalSearchCondition(searchParams);
 
-    const sql = useSql();
-
     // 查询分页后的日志条目
     const dataQuery = `
       SELECT id, journalno AS "journalNo", title, image, summary, content, editor, date, tags FROM journal
@@ -30,7 +27,7 @@ export async function GET(request: Request) {
 
     const dataValues = [...values, pageSize, offset];
     console.log(dataQuery, dataValues);
-    const journals = (await sql.query(dataQuery, dataValues)) as Journal[];
+    const journals = (await indie.query(dataQuery, dataValues)) as Journal[];
 
     return NextResponse.json({
       success: true,
