@@ -1,23 +1,31 @@
 import { NextResponse } from "next/server";
-import { buildTrackSearchCondition, getTrackSearchParams } from "@/lib/search";
-import { indie } from "@/lib/db";
-import { Track } from "@/lib/types";
+import { getPaginationParams } from "@/lib/pagination";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
-    const searchParams = getTrackSearchParams(request);
+    const { searchParams } = new URL(request.url);
+    const { pageSize, offset } = getPaginationParams(request);
 
-    // 构建搜索条件
-    const { whereClause, values } = buildTrackSearchCondition(searchParams);
+    const prisma = new PrismaClient();
+    const where: Prisma.TrackWhereInput = {};
 
-    // 查询分页后的日志条目
-    const dataQuery = `
-      SELECT id, title, artist, album, src, pic, lrc,  journalno AS "journalNo",  songno AS "songNo", duration FROM track
-      ${whereClause}
-    `;
+    const query = searchParams.get("query") || undefined;
+    if (query) {
+      where.title = {
+        contains: query,
+      };
+    }
 
-    console.log(dataQuery, values);
-    const tracks = (await indie.query(dataQuery, values)) as Track[];
+    const tracks = await prisma.track.findMany({
+      skip: offset,
+      take: pageSize,
+      orderBy: {
+        journalNo: "desc",
+      },
+
+      where: where,
+    });
 
     return NextResponse.json({
       success: true,

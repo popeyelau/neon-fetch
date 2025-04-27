@@ -1,6 +1,6 @@
 export interface Journal {
   id: string;
-  journalNo: number;
+  journalNo: string;
   title: string;
   image: string;
   summary: string;
@@ -18,7 +18,7 @@ export interface Track {
   src: string;
   pic: string;
   lrc: string;
-  journalNo: number;
+  journalNo: string;
   songNo: number;
   duration: string;
 }

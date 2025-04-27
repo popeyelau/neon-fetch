@@ -1,6 +1,6 @@
 datasource db {
   provider  = "postgresql"
-  url       = "postgresql://default:ChHbwOT84PFc@ep-broad-breeze-a1hla3yc-pooler.ap-southeast-1.aws.neon.tech/verceldb?sslmode=require"
+  url       = "postgresql://default:ChHbwOT84PFc@ep-broad-breeze-a1hla3yc-pooler.ap-southeast-1.aws.neon.tech/verceldb?sslmode=require&pgbouncer=true"
 }
 
 generator client {
@@ -8,28 +8,31 @@ generator client {
   previewFeatures = ["driverAdapters"]
 }
 
-model journal {
+model Journal {
   id String @id
-  journalno Int
+  journalNo Int @unique @map("journalno")
   title String
   image String
   summary String
   content String
   editor String
-  date BigInt
-  tracks String
-  tags String?
+  date String @default("")
+  tags String @default("")
+  tracks Track[]
+  @@map("journal")
 }
 
-model track {
+model Track {
   id String @id
   title String
   artist String
   album String
   src String
   pic String
-  lrc String
-  journalno Int
-  songno Int
+  lrc String?
+  journalNo Int @map("journalno")
+  songNo Int @map("songno")
   duration String
+  journal Journal @relation(fields: [journalNo], references: [journalNo])
+  @@map("track")
 }

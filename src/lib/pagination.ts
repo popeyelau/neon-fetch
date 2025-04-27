@@ -5,14 +5,6 @@ export interface PaginationParams {
   offset: number;
 }
 
-export interface PaginationMetadata {
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  hasMore: boolean;
-}
-
 /**
  * 从请求中提取分页参数
  */

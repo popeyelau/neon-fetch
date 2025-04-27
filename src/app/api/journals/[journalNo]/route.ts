@@ -1,5 +1,4 @@
-import { indie } from "@/lib/db";
-import { Journal } from "@/lib/types";
+import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -8,17 +7,19 @@ export async function GET(
 ) {
   try {
     const { journalNo } = await params;
-    const journalQuery = `SELECT id, journalno AS "journalNo", title, image, summary, content, editor, to_timestamp(date/1000) AS date, tags FROM journal WHERE journalno = $1`;
-    const journalResult = (await indie.query(journalQuery, [
-      journalNo,
-    ])) as Journal[];
+    const prisma = new PrismaClient();
 
-    const data = (journalResult && journalResult[0]) || null;
-
-    // 返回音轨和相关日志条目
+    const journal = await prisma.journal.findUnique({
+      where: {
+        journalNo: Number.parseInt(journalNo),
+      },
+      include: {
+        tracks: true,
+      },
+    });
     return NextResponse.json({
       success: true,
-      data,
+      data: journal,
     });
   } catch (error) {
     console.error("Error fetching track:", error);

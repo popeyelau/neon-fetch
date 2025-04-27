@@ -1,4 +1,4 @@
-import { indie } from "@/lib/db";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -7,14 +7,21 @@ export async function GET(
 ) {
   try {
     const { journalNo } = await params;
-    // 查询特定ID的音轨
-    const trackQuery = `SELECT id, title, artist, album, src, pic, lrc,  journalno AS "journalNo",  songno AS "songNo", duration FROM track WHERE journalno = $1`;
-    const trackResult = await indie.query(trackQuery, [journalNo]);
+    const prisma = new PrismaClient();
+    const where: Prisma.TrackWhereInput = {
+      journalNo: Number.parseInt(journalNo),
+    };
 
-    // 返回音轨和相关日志条目
+    const tracks = await prisma.track.findMany({
+      orderBy: {
+        songNo: "desc",
+      },
+      where: where,
+    });
+
     return NextResponse.json({
       success: true,
-      data: trackResult,
+      data: tracks,
     });
   } catch (error) {
     console.error("Error fetching track:", error);

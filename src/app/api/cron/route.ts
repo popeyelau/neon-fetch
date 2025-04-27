@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { indie } from "@/lib/db";
 import { Journal, Track } from "@/lib/types";
+import { PrismaClient } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
@@ -14,11 +14,11 @@ export async function GET(request: Request) {
       });
     }
 
-    const latest = await (
+    const res = await (
       await fetch("https://api.indie.cn/luoo-music/journal/list")
     ).json();
 
-    const rows = (latest.data?.rows || []) as Journal[];
+    const rows = (res.data?.rows || []) as Journal[];
     if (!rows) {
       return NextResponse.json({
         success: false,
@@ -26,43 +26,88 @@ export async function GET(request: Request) {
       });
     }
 
-    const upstream = rows[0].journalNo;
+    const upstream = Number.parseInt(rows[0].journalNo);
 
-    const res = await indie.query(
-      "select journalno AS count from journal  order by journalno desc limit 1"
-    );
+    const prisma = new PrismaClient();
+    const latest = await prisma.journal.findFirst({
+      orderBy: {
+        journalNo: "desc",
+      },
+      select: {
+        journalNo: true,
+      },
+    });
 
-    if (res.length < 1) {
+    if (!latest) {
       return NextResponse.json({
         success: false,
         error: "Failed to fetch journals",
       });
     }
-    const { count } = res[0];
-    const local = Number.parseInt(count);
+
+    const local = latest.journalNo;
 
     if (local == upstream) {
       return NextResponse.json({
         success: true,
-        error: `Already updated db: ${count} upstream: ${upstream}`,
+        error: `Already updated db: ${local} upstream: ${upstream}`,
       });
     }
 
-    const journals: Journal[] = [];
-
+    const results: string[] = [];
     for (let i = local + 1; i <= upstream; i++) {
-      const journal = rows.find((v) => v.journalNo == i);
+      const journal = rows.find((v) => v.journalNo == i.toString());
       if (!journal) continue;
 
       const tracks = await fetchTracks(i);
       if (!tracks) continue;
-      await insertJournal(journal, tracks);
-      journals.push(journal);
+
+      const [res1, res2] = await prisma.$transaction([
+        prisma.journal.create({
+          data: {
+            id: journal.id,
+            journalNo: Number.parseInt(journal.journalNo),
+            title: journal.title,
+            image: journal.image,
+            summary: journal.summary,
+            content: journal.content,
+            editor: journal.editor,
+            date: journal.date,
+            tags: Array.isArray(journal.tags)
+              ? journal.tags.join(",")
+              : journal.tags,
+          },
+          select: {
+            journalNo: true,
+          },
+        }),
+
+        prisma.track.createManyAndReturn({
+          data: tracks.map((v) => ({
+            id: v.id,
+            title: v.title,
+            artist: v.artist,
+            album: v.album,
+            src: v.src,
+            pic: v.pic,
+            lrc: v.lrc,
+            journalNo: Number.parseInt(v.journalNo),
+            songNo: v.songNo,
+            duration: v.duration,
+          })),
+          select: {
+            id: true,
+            journalNo: true,
+          },
+        }),
+      ]);
+      results.push(res1.journalNo.toString());
+      results.push(...res2.map((v) => v.id));
     }
 
     return NextResponse.json({
       success: true,
-      data: journals.map((v) => v.title),
+      data: results,
     });
   } catch (error) {
     console.error("Error fetching journals:", error);
@@ -79,49 +124,3 @@ const fetchTracks = async (journalNo: number) => {
   const tracks = (res?.data || []) as Track[];
   return tracks;
 };
-
-async function insertJournal(journal: Journal, tracks: Track[]) {
-  await indie.query(
-    `insert into journal (id, journalno, title, image, summary, content, editor, "date", tracks, tags)
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`,
-    [
-      journal.id,
-      journal.journalNo,
-      journal.title,
-      journal.image,
-      journal.summary,
-      journal.content,
-      journal.editor,
-      convertDate(journal.date),
-      JSON.stringify(tracks),
-      Array.isArray(journal.tags) ? journal.tags.join(",") : journal.tags,
-    ]
-  );
-
-  for (let i = 0; i < tracks.length; i++) {
-    const track = tracks[i];
-    await indie.query(
-      `insert into track (id, title, artist, album, src, pic, lrc, journalno, songno, duration)
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`,
-      [
-        track.id,
-        track.title,
-        track.artist,
-        track.album,
-        track.src,
-        track.pic,
-        track.lrc,
-        track.journalNo,
-        track.songNo,
-        track.duration,
-      ]
-    );
-  }
-}
-
-function convertDate(dateStr: string) {
-  const normalized = dateStr.replace(/\./g, "-"); // 先把 . 换成 -
-  const date = new Date(normalized);
-  const timestamp = date.getTime();
-  return timestamp;
-}
