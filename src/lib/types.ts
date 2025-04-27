@@ -7,7 +7,7 @@ export interface Journal {
   content: string;
   editor: string;
   date: string;
-  tag: string;
+  tag: string | string[];
 }
 
 export interface Track {

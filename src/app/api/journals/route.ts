@@ -26,6 +26,8 @@ export async function GET(request: Request) {
       LIMIT $${values.length + 1} OFFSET $${values.length + 2}
     `;
 
+    console.log(dataQuery);
+
     const dataValues = [...values, pageSize, offset];
     console.log(dataQuery, dataValues);
     const journals = (await indie.query(dataQuery, dataValues)) as Journal[];
