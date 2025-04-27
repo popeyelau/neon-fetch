@@ -1,0 +1,29 @@
+import { useSql } from "@/app/hooks/useSql";
+import { neon } from "@neondatabase/serverless";
+import { NextResponse } from "next/server";
+
+export async function GET(
+  request: Request,
+  { params }: { params: { journalNo: number } }
+) {
+  try {
+    const journalNo = params.journalNo;
+
+    const sql = useSql();
+    // 查询特定ID的音轨
+    const trackQuery = `SELECT id, title, artist, album, src, pic, lrc,  journalno AS "journalNo",  songno AS "songNo", duration FROM track WHERE journalno = $1`;
+    const trackResult = await sql.query(trackQuery, [journalNo]);
+
+    // 返回音轨和相关日志条目
+    return NextResponse.json({
+      success: true,
+      data: trackResult,
+    });
+  } catch (error) {
+    console.error("Error fetching track:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch track" },
+      { status: 500 }
+    );
+  }
+}
