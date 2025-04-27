@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { journalNo: number } }
+  { params }: { params: { journalNo: string } }
 ) {
   try {
     const journalNo = params.journalNo;
