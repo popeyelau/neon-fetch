@@ -9,6 +9,16 @@ import { Journal, Track } from "@/lib/types";
 
 export async function GET(request: Request) {
   try {
+    if (
+      request.headers.get("Authorization") !==
+      `Bearer ${process.env.CRON_SECRET}`
+    ) {
+      return NextResponse.json({
+        success: false,
+        error: "Unauthorized",
+      });
+    }
+
     const latest = await (
       await fetch("https://api.indie.cn/luoo-music/journal/list")
     ).json();
