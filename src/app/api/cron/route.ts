@@ -1,9 +1,4 @@
 import { NextResponse } from "next/server";
-import { getPaginationParams } from "@/lib/pagination";
-import {
-  getJournalSearchParams,
-  buildJournalSearchCondition,
-} from "@/lib/search";
 import { indie } from "@/lib/db";
 import { Journal, Track } from "@/lib/types";
 
@@ -31,7 +26,7 @@ export async function GET(request: Request) {
       });
     }
 
-    let upstream = rows[0].journalNo;
+    const upstream = rows[0].journalNo;
 
     const res = await indie.query(
       "select journalno AS count from journal  order by journalno desc limit 1"
@@ -53,7 +48,7 @@ export async function GET(request: Request) {
       });
     }
 
-    let journals: Journal[] = [];
+    const journals: Journal[] = [];
 
     for (let i = local + 1; i <= upstream; i++) {
       const journal = rows.find((v) => v.journalNo == i);
@@ -67,7 +62,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      data: journals,
+      data: journals.map((v) => v.title),
     });
   } catch (error) {
     console.error("Error fetching journals:", error);
